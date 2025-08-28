@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Pagar Conta - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-dollar-sign me-2"></i>Pagar Conta</h1>
+    <a href="{{ url_for('listar_contas_pagar') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Informações da Conta -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informações da Conta</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Descrição:</strong><br>
+                        {{ conta.descricao }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Fornecedor:</strong><br>
+                        {{ conta.pessoa_nome or 'Não informado' }}
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Valor Original:</strong><br>
+                        <span class="h5">R$ {{ "%.2f"|format(conta.valor_original) }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Valor Pago:</strong><br>
+                        <span class="h5 text-success">R$ {{ "%.2f"|format(conta.valor_pago) }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Saldo Devedor:</strong><br>
+                        <span class="h5 text-danger">R$ {{ "%.2f"|format(conta.valor_original - conta.valor_pago) }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Vencimento:</strong><br>
+                        <span class="h5">{{ conta.data_vencimento.strftime('%d/%m/%Y') if conta.data_vencimento else 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Formulário de Pagamento -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Registrar Pagamento</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('processar_pagamento', id=conta.id) }}" method="POST">
+                    <div class="row">
+                        <!-- Conta Bancária -->
+                        <div class="col-md-6 mb-3">
+                            <label for="conta_bancaria_id" class="form-label">
+                                <i class="fas fa-university me-1"></i>Conta para Débito *
+                            </label>
+                            <select class="form-select" id="conta_bancaria_id" name="conta_bancaria_id" required>
+                                <option value="">Selecione a conta...</option>
+                                {% for cb in contas_bancarias %}
+                                <option value="{{ cb.id }}" data-saldo="{{ cb.saldo_atual }}">
+                                    {{ cb.banco }} - Ag: {{ cb.agencia or 'N/A' }} - Saldo: R$ {{ "%.2f"|format(cb.saldo_atual) }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Valor do Pagamento -->
+                        <div class="col-md-6 mb-3">
+                            <label for="valor_pago" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Valor do Pagamento *
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="valor_pago" 
+                                       name="valor_pago" required step="0.01" min="0.01" 
+                                       max="{{ conta.valor_original - conta.valor_pago }}"
+                                       value="{{ conta.valor_original - conta.valor_pago }}">
+                            </div>
+                            <div class="form-text">Máximo: R$ {{ "%.2f"|format(conta.valor_original - conta.valor_pago) }}</div>
+                        </div>
+                        
+                        <!-- Data do Pagamento -->
+                        <div class="col-md-6 mb-3">
+                            <label for="data_pagamento" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Data do Pagamento *
+                            </label>
+                            <input type="date" class="form-control" id="data_pagamento" 
+                                   name="data_pagamento" required>
+                        </div>
+                        
+                        <!-- Observação -->
+                        <div class="col-md-12 mb-3">
+                            <label for="observacao" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Observação
+                            </label>
+                            <textarea class="form-control" id="observacao" name="observacao" 
+                                      rows="3" maxlength="500" placeholder="Observações sobre o pagamento..."></textarea>
+                        </div>
+                        
+                        <!-- Resumo do Pagamento -->
+                        <div class="col-md-12 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-calculator me-2"></i>Resumo do Pagamento
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <small class="text-muted">Valor a Pagar:</small>
+                                            <div id="resumo-valor" class="h5 text-danger">R$ 0,00</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted">Saldo da Conta:</small>
+                                            <div id="resumo-saldo-conta" class="h5">R$ 0,00</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted">Saldo Após Pagamento:</small>
+                                            <div id="resumo-saldo-final" class="h5">R$ 0,00</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted">Situação:</small>
+                                            <div id="resumo-situacao" class="h5">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_contas_pagar') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Confirmar Pagamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contaSelect = document.getElementById('conta_bancaria_id');
+    const valorInput = document.getElementById('valor_pago');
+    const dataInput = document.getElementById('data_pagamento');
+    
+    const resumoValor = document.getElementById('resumo-valor');
+    const resumoSaldoConta = document.getElementById('resumo-saldo-conta');
+    const resumoSaldoFinal = document.getElementById('resumo-saldo-final');
+    const resumoSituacao = document.getElementById('resumo-situacao');
+    
+    // Definir data padrão como hoje
+    const hoje = new Date();
+    dataInput.value = hoje.toISOString().split('T')[0];
+    
+    function atualizarResumo() {
+        const valor = parseFloat(valorInput.value) || 0;
+        const selectedOption = contaSelect.options[contaSelect.selectedIndex];
+        const saldoConta = selectedOption ? parseFloat(selectedOption.dataset.saldo) || 0 : 0;
+        const saldoFinal = saldoConta - valor;
+        
+        // Valor a pagar
+        resumoValor.textContent = 'R$ ' + valor.toFixed(2).replace('.', ',');
+        
+        // Saldo da conta
+        resumoSaldoConta.textContent = 'R$ ' + saldoConta.toFixed(2).replace('.', ',');
+        resumoSaldoConta.className = saldoConta >= 0 ? 'h5 text-success' : 'h5 text-danger';
+        
+        // Saldo final
+        resumoSaldoFinal.textContent = 'R$ ' + saldoFinal.toFixed(2).replace('.', ',');
+        resumoSaldoFinal.className = saldoFinal >= 0 ? 'h5 text-success' : 'h5 text-danger';
+        
+        // Situação
+        if (!contaSelect.value) {
+            resumoSituacao.textContent = '-';
+            resumoSituacao.className = 'h5';
+        } else if (saldoFinal < 0) {
+            resumoSituacao.textContent = 'SALDO INSUFICIENTE';
+            resumoSituacao.className = 'h5 text-danger';
+        } else {
+            resumoSituacao.textContent = 'OK';
+            resumoSituacao.className = 'h5 text-success';
+        }
+    }
+    
+    // Event listeners
+    contaSelect.addEventListener('change', atualizarResumo);
+    valorInput.addEventListener('input', atualizarResumo);
+    
+    // Validação do formulário
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const valor = parseFloat(valorInput.value) || 0;
+        const selectedOption = contaSelect.options[contaSelect.selectedIndex];
+        const saldoConta = selectedOption ? parseFloat(selectedOption.dataset.saldo) || 0 : 0;
+        
+        if (valor > saldoConta) {
+            e.preventDefault();
+            alert('Saldo insuficiente na conta selecionada!');
+            return false;
+        }
+        
+        if (valor <= 0) {
+            e.preventDefault();
+            alert('O valor do pagamento deve ser maior que zero!');
+            valorInput.focus();
+            return false;
+        }
+    });
+    
+    // Atualizar resumo inicial
+    atualizarResumo();
+});
+</script>
+{% endblock %}

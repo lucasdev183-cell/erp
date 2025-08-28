@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Conta a Pagar - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Nova Conta a Pagar</h1>
+    <a href="{{ url_for('listar_contas_pagar') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Cadastro de Conta a Pagar</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('salvar_conta_pagar') }}" method="POST">
+                    <div class="row">
+                        <!-- Fornecedor -->
+                        <div class="col-md-6 mb-3">
+                            <label for="pessoa_id" class="form-label">
+                                <i class="fas fa-user me-1"></i>Fornecedor/Funcionário *
+                            </label>
+                            <select class="form-select" id="pessoa_id" name="pessoa_id" required>
+                                <option value="">Selecione...</option>
+                                {% for pessoa in pessoas %}
+                                <option value="{{ pessoa.id }}">
+                                    {{ pessoa.nome }} ({{ pessoa.tipo.title() }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Conta Bancária -->
+                        <div class="col-md-6 mb-3">
+                            <label for="conta_bancaria_id" class="form-label">
+                                <i class="fas fa-university me-1"></i>Conta para Pagamento
+                            </label>
+                            <select class="form-select" id="conta_bancaria_id" name="conta_bancaria_id">
+                                <option value="">Selecione (opcional)...</option>
+                                {% for conta in contas_bancarias %}
+                                <option value="{{ conta.id }}">
+                                    {{ conta.banco }} - Ag: {{ conta.agencia or 'N/A' }} - Conta: {{ conta.conta or 'N/A' }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Conta que será debitada no pagamento</div>
+                        </div>
+                        
+                        <!-- Descrição -->
+                        <div class="col-md-12 mb-3">
+                            <label for="descricao" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Descrição *
+                            </label>
+                            <input type="text" class="form-control" id="descricao" 
+                                   name="descricao" required maxlength="200">
+                            <div class="form-text">Descrição da conta a pagar</div>
+                        </div>
+                        
+                        <!-- Categoria -->
+                        <div class="col-md-6 mb-3">
+                            <label for="categoria" class="form-label">
+                                <i class="fas fa-tags me-1"></i>Categoria
+                            </label>
+                            <select class="form-select" id="categoria" name="categoria">
+                                <option value="">Selecione...</option>
+                                <option value="Fornecedores">Fornecedores</option>
+                                <option value="Salários">Salários</option>
+                                <option value="Impostos">Impostos</option>
+                                <option value="Aluguel">Aluguel</option>
+                                <option value="Energia">Energia</option>
+                                <option value="Água">Água</option>
+                                <option value="Telefone">Telefone</option>
+                                <option value="Internet">Internet</option>
+                                <option value="Combustível">Combustível</option>
+                                <option value="Manutenção">Manutenção</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Escritório">Material de Escritório</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Valor Original -->
+                        <div class="col-md-6 mb-3">
+                            <label for="valor_original" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Valor *
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="valor_original" 
+                                       name="valor_original" required step="0.01" min="0.01">
+                            </div>
+                        </div>
+                        
+                        <!-- Data de Vencimento -->
+                        <div class="col-md-6 mb-3">
+                            <label for="data_vencimento" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Data de Vencimento *
+                            </label>
+                            <input type="date" class="form-control" id="data_vencimento" 
+                                   name="data_vencimento" required>
+                        </div>
+                        
+                        <!-- Observação -->
+                        <div class="col-md-12 mb-3">
+                            <label for="observacao" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Observação
+                            </label>
+                            <textarea class="form-control" id="observacao" name="observacao" 
+                                      rows="3" maxlength="500"></textarea>
+                        </div>
+                        
+                        <!-- Resumo -->
+                        <div class="col-md-12 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle me-2"></i>Resumo da Conta
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Fornecedor:</small>
+                                            <div id="resumo-fornecedor">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Valor:</small>
+                                            <div id="resumo-valor" class="text-danger fw-bold">R$ 0,00</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Vencimento:</small>
+                                            <div id="resumo-vencimento">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_contas_pagar') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <div>
+                            <button type="reset" class="btn btn-outline-warning me-2">
+                                <i class="fas fa-undo me-2"></i>Limpar
+                            </button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-save me-2"></i>Salvar Conta
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fornecedorSelect = document.getElementById('pessoa_id');
+    const valorInput = document.getElementById('valor_original');
+    const vencimentoInput = document.getElementById('data_vencimento');
+    
+    const resumoFornecedor = document.getElementById('resumo-fornecedor');
+    const resumoValor = document.getElementById('resumo-valor');
+    const resumoVencimento = document.getElementById('resumo-vencimento');
+    
+    function atualizarResumo() {
+        // Fornecedor
+        const fornecedorOption = fornecedorSelect.options[fornecedorSelect.selectedIndex];
+        resumoFornecedor.textContent = fornecedorSelect.value ? fornecedorOption.text : '-';
+        
+        // Valor
+        const valor = parseFloat(valorInput.value) || 0;
+        resumoValor.textContent = 'R$ ' + valor.toFixed(2).replace('.', ',');
+        
+        // Vencimento
+        if (vencimentoInput.value) {
+            const data = new Date(vencimentoInput.value);
+            resumoVencimento.textContent = data.toLocaleDateString('pt-BR');
+            
+            // Verificar se está vencendo
+            const hoje = new Date();
+            const diffTime = data - hoje;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                resumoVencimento.className = 'text-danger fw-bold';
+                resumoVencimento.textContent += ' (VENCIDO)';
+            } else if (diffDays <= 7) {
+                resumoVencimento.className = 'text-warning fw-bold';
+                resumoVencimento.textContent += ` (${diffDays} dias)`;
+            } else {
+                resumoVencimento.className = '';
+            }
+        } else {
+            resumoVencimento.textContent = '-';
+            resumoVencimento.className = '';
+        }
+    }
+    
+    // Event listeners
+    fornecedorSelect.addEventListener('change', atualizarResumo);
+    valorInput.addEventListener('input', atualizarResumo);
+    vencimentoInput.addEventListener('change', atualizarResumo);
+    
+    // Definir data padrão (hoje + 30 dias)
+    const hoje = new Date();
+    const dataDefault = new Date(hoje.getTime() + (30 * 24 * 60 * 60 * 1000));
+    vencimentoInput.value = dataDefault.toISOString().split('T')[0];
+    
+    // Atualizar resumo inicial
+    atualizarResumo();
+});
+</script>
+{% endblock %}

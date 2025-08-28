@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Movimentações Financeiras - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-exchange-alt me-2"></i>Movimentações Financeiras</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Histórico de Movimentações</h5>
+    </div>
+    <div class="card-body">
+        {% if movimentacoes %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Conta Bancária</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mov in movimentacoes %}
+                    <tr>
+                        <td>{{ mov.data_movimentacao.strftime('%d/%m/%Y %H:%M') if mov.data_movimentacao else '-' }}</td>
+                        <td>
+                            <strong>{{ mov.banco_nome or 'N/A' }}</strong><br>
+                            <small class="text-muted">Ag: {{ mov.agencia or 'N/A' }} - Conta: {{ mov.conta or 'N/A' }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if mov.tipo == 'entrada' else 'danger' if mov.tipo == 'saida' else 'info' }}">
+                                <i class="fas fa-{{ 'arrow-up' if mov.tipo == 'entrada' else 'arrow-down' if mov.tipo == 'saida' else 'exchange-alt' }}"></i>
+                                {{ mov.tipo.title() }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-bold text-{{ 'success' if mov.tipo == 'entrada' else 'danger' }}">
+                                {{ '+' if mov.tipo == 'entrada' else '-' }}R$ {{ "%.2f"|format(mov.valor) }}
+                            </span>
+                        </td>
+                        <td>{{ mov.descricao or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Resumo -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">Resumo das Movimentações</h6>
+                        <div class="row">
+                            {% set total_entradas = movimentacoes|selectattr('tipo', 'equalto', 'entrada')|sum(attribute='valor') %}
+                            {% set total_saidas = movimentacoes|selectattr('tipo', 'equalto', 'saida')|sum(attribute='valor') %}
+                            {% set saldo_movimentacoes = total_entradas - total_saidas %}
+                            
+                            <div class="col-md-3">
+                                <small class="text-muted">Total de Entradas:</small>
+                                <div class="h5 text-success">R$ {{ "%.2f"|format(total_entradas) }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Total de Saídas:</small>
+                                <div class="h5 text-danger">R$ {{ "%.2f"|format(total_saidas) }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Saldo Líquido:</small>
+                                <div class="h5 {{ 'text-success' if saldo_movimentacoes >= 0 else 'text-danger' }}">
+                                    R$ {{ "%.2f"|format(saldo_movimentacoes) }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Total de Movimentações:</small>
+                                <div class="h5">{{ movimentacoes|length }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhuma movimentação registrada</h5>
+            <p class="text-muted">As movimentações aparecerão automaticamente quando você pagar ou receber contas</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

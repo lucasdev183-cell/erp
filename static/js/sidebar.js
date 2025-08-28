@@ -11,6 +11,7 @@ class SidebarManager {
         this.mainContent = document.getElementById('mainContent');
         this.isDesktop = window.innerWidth >= 992;
         this.isOpen = false;
+        this.isPinned = false;
         
         this.init();
     }
@@ -19,6 +20,24 @@ class SidebarManager {
         // Event listeners
         this.sidebarToggle.addEventListener('click', () => this.toggle());
         this.sidebarOverlay.addEventListener('click', () => this.close());
+        
+        // Listener para hover no botão toggle
+        this.sidebarToggle.addEventListener('mouseenter', () => {
+            if (!this.isOpen && this.isDesktop) {
+                this.open();
+            }
+        });
+        
+        // Listener para sair do hover na sidebar
+        this.sidebar.addEventListener('mouseleave', () => {
+            if (this.isOpen && this.isDesktop && !this.isPinned) {
+                setTimeout(() => {
+                    if (!this.sidebar.matches(':hover') && !this.sidebarToggle.matches(':hover')) {
+                        this.close();
+                    }
+                }, 300);
+            }
+        });
         
         // Listener para redimensionamento da janela
         window.addEventListener('resize', () => this.handleResize());
@@ -30,6 +49,15 @@ class SidebarManager {
             }
         });
         
+        // Fechar menu ao clicar em links
+        this.sidebar.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A' && e.target.getAttribute('href') && !e.target.classList.contains('dropdown-toggle')) {
+                setTimeout(() => {
+                    this.close();
+                }, 100);
+            }
+        });
+        
         // Inicializar estado baseado no tamanho da tela
         this.handleResize();
         
@@ -38,6 +66,10 @@ class SidebarManager {
         
         // Marcar item ativo baseado na URL atual
         this.setActiveMenuItem();
+        
+        // Inicializar como fechado por padrão
+        this.isPinned = false;
+        this.close();
     }
     
     toggle() {

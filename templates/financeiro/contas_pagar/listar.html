@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Contas a Pagar - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Contas a Pagar</h1>
+    <a href="{{ url_for('nova_conta_pagar') }}" class="btn btn-danger">
+        <i class="fas fa-plus me-2"></i>Nova Conta a Pagar
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Lista de Contas a Pagar</h5>
+    </div>
+    <div class="card-body">
+        {% if contas %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Fornecedor</th>
+                        <th>Categoria</th>
+                        <th>Valor Original</th>
+                        <th>Valor Pago</th>
+                        <th>Saldo</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for conta in contas %}
+                    {% set saldo = conta.valor_original - conta.valor_pago %}
+                    {% set vencido = conta.data_vencimento < moment().format('YYYY-MM-DD') if conta.status == 'pendente' %}
+                    <tr class="{{ 'table-danger' if vencido else '' }}">
+                        <td><strong>{{ conta.descricao }}</strong></td>
+                        <td>{{ conta.pessoa_nome or '-' }}</td>
+                        <td>{{ conta.categoria or '-' }}</td>
+                        <td>R$ {{ "%.2f"|format(conta.valor_original) }}</td>
+                        <td>
+                            {% if conta.valor_pago > 0 %}
+                                <span class="text-success">R$ {{ "%.2f"|format(conta.valor_pago) }}</span>
+                            {% else %}
+                                <span class="text-muted">R$ 0,00</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-bold text-{{ 'success' if saldo <= 0 else 'danger' }}">
+                                R$ {{ "%.2f"|format(saldo) }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if conta.data_vencimento %}
+                                {{ conta.data_vencimento.strftime('%d/%m/%Y') if conta.data_vencimento is string == false else conta.data_vencimento }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if conta.status == 'pago' else 'warning' if conta.status == 'parcial' else 'danger' if vencido else 'secondary' }}">
+                                {{ conta.status.title() }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if conta.status in ['pendente', 'parcial'] %}
+                                <a href="{{ url_for('pagar_conta', id=conta.id) }}" 
+                                   class="btn btn-outline-success" 
+                                   data-bs-toggle="tooltip" title="Pagar">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </a>
+                                {% endif %}
+                                <button type="button" class="btn btn-outline-primary" 
+                                        data-bs-toggle="tooltip" title="Visualizar">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-warning"
+                                        data-bs-toggle="tooltip" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Resumo -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">Resumo das Contas a Pagar</h6>
+                        <div class="row">
+                            {% set total_original = contas|sum(attribute='valor_original') %}
+                            {% set total_pago = contas|sum(attribute='valor_pago') %}
+                            {% set total_saldo = total_original - total_pago %}
+                            
+                            <div class="col-md-3">
+                                <small class="text-muted">Total Original:</small>
+                                <div class="h5">R$ {{ "%.2f"|format(total_original) }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Total Pago:</small>
+                                <div class="h5 text-success">R$ {{ "%.2f"|format(total_pago) }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Saldo a Pagar:</small>
+                                <div class="h5 text-danger">R$ {{ "%.2f"|format(total_saldo) }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Total de Contas:</small>
+                                <div class="h5">{{ contas|length }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhuma conta a pagar cadastrada</h5>
+            <p class="text-muted">Clique no botão "Nova Conta a Pagar" para começar</p>
+            <a href="{{ url_for('nova_conta_pagar') }}" class="btn btn-danger">
+                <i class="fas fa-plus me-2"></i>Cadastrar Primeira Conta
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -92,6 +92,29 @@
                 </div>
             </div>
             
+            <!-- Financeiro -->
+            <div class="sidebar-dropdown">
+                <a href="#" class="sidebar-item dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#financeiroMenu">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Financeiro</span>
+                    <i class="fas fa-chevron-down ms-auto"></i>
+                </a>
+                <div class="collapse" id="financeiroMenu">
+                    <a href="{{ url_for('listar_contas_bancarias') }}" class="sidebar-subitem">
+                        <i class="fas fa-university"></i>Contas Bancárias
+                    </a>
+                    <a href="{{ url_for('listar_contas_pagar') }}" class="sidebar-subitem">
+                        <i class="fas fa-file-invoice-dollar"></i>Contas a Pagar
+                    </a>
+                    <a href="{{ url_for('listar_contas_receber') }}" class="sidebar-subitem">
+                        <i class="fas fa-hand-holding-usd"></i>Contas a Receber
+                    </a>
+                    <a href="{{ url_for('listar_movimentacoes_financeiras') }}" class="sidebar-subitem">
+                        <i class="fas fa-exchange-alt"></i>Movimentações
+                    </a>
+                </div>
+            </div>
+            
             <!-- Atalhos Rápidos -->
             <div class="sidebar-section">
                 <h6 class="sidebar-section-title">Atalhos Rápidos</h6>
@@ -106,6 +129,18 @@
                 <a href="{{ url_for('nova_mercadoria') }}" class="sidebar-item quick-action">
                     <i class="fas fa-box text-warning"></i>
                     <span>Nova Mercadoria</span>
+                </a>
+                <a href="{{ url_for('nova_conta_bancaria') }}" class="sidebar-item quick-action">
+                    <i class="fas fa-university text-primary"></i>
+                    <span>Nova Conta Bancária</span>
+                </a>
+                <a href="{{ url_for('nova_conta_pagar') }}" class="sidebar-item quick-action">
+                    <i class="fas fa-file-invoice-dollar text-danger"></i>
+                    <span>Nova Conta a Pagar</span>
+                </a>
+                <a href="{{ url_for('nova_conta_receber') }}" class="sidebar-item quick-action">
+                    <i class="fas fa-hand-holding-usd text-success"></i>
+                    <span>Nova Conta a Receber</span>
                 </a>
             </div>
         </div>

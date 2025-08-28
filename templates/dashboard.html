@@ -11,7 +11,7 @@
     </div>
 </div>
 
-<!-- Cards de Estatísticas -->
+<!-- Cards de Estatísticas - Cadastros -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="stat-card">
@@ -64,6 +64,68 @@
             <div class="mt-2">
                 <a href="{{ url_for('listar_mercadorias') }}" class="text-white text-decoration-none">
                     <small><i class="fas fa-eye me-1"></i>Ver todas</small>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards Financeiros -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
+            <div class="stat-number">R$ {{ "%.0f"|format(stats.saldo_total) }}</div>
+            <div class="stat-label">
+                <i class="fas fa-university me-2"></i>Saldo Total
+            </div>
+            <div class="mt-2">
+                <a href="{{ url_for('listar_contas_bancarias') }}" class="text-white text-decoration-none">
+                    <small><i class="fas fa-eye me-1"></i>{{ stats.contas_bancarias }} contas</small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #dc3545, #c82333);">
+            <div class="stat-number">R$ {{ "%.0f"|format(stats.valor_pagar) }}</div>
+            <div class="stat-label">
+                <i class="fas fa-file-invoice-dollar me-2"></i>A Pagar
+            </div>
+            <div class="mt-2">
+                <a href="{{ url_for('listar_contas_pagar') }}" class="text-white text-decoration-none">
+                    <small><i class="fas fa-eye me-1"></i>{{ stats.contas_pagar }} pendentes</small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #007bff, #0056b3);">
+            <div class="stat-number">R$ {{ "%.0f"|format(stats.valor_receber) }}</div>
+            <div class="stat-label">
+                <i class="fas fa-hand-holding-usd me-2"></i>A Receber
+            </div>
+            <div class="mt-2">
+                <a href="{{ url_for('listar_contas_receber') }}" class="text-white text-decoration-none">
+                    <small><i class="fas fa-eye me-1"></i>{{ stats.contas_receber }} pendentes</small>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #6f42c1, #5a2d91);">
+            {% set fluxo = stats.valor_receber - stats.valor_pagar %}
+            <div class="stat-number {{ 'text-success' if fluxo >= 0 else 'text-danger' }}">
+                R$ {{ "%.0f"|format(fluxo) }}
+            </div>
+            <div class="stat-label">
+                <i class="fas fa-chart-line me-2"></i>Fluxo
+            </div>
+            <div class="mt-2">
+                <a href="{{ url_for('listar_movimentacoes_financeiras') }}" class="text-white text-decoration-none">
+                    <small><i class="fas fa-eye me-1"></i>Ver movimentações</small>
                 </a>
             </div>
         </div>

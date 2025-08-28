@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Conta a Receber - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-hand-holding-usd me-2"></i>Nova Conta a Receber</h1>
+    <a href="{{ url_for('listar_contas_receber') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Cadastro de Conta a Receber</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('salvar_conta_receber') }}" method="POST">
+                    <div class="row">
+                        <!-- Cliente -->
+                        <div class="col-md-6 mb-3">
+                            <label for="pessoa_id" class="form-label">
+                                <i class="fas fa-user me-1"></i>Cliente *
+                            </label>
+                            <select class="form-select" id="pessoa_id" name="pessoa_id" required>
+                                <option value="">Selecione...</option>
+                                {% for pessoa in pessoas %}
+                                <option value="{{ pessoa.id }}">{{ pessoa.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Conta Bancária -->
+                        <div class="col-md-6 mb-3">
+                            <label for="conta_bancaria_id" class="form-label">
+                                <i class="fas fa-university me-1"></i>Conta para Recebimento
+                            </label>
+                            <select class="form-select" id="conta_bancaria_id" name="conta_bancaria_id">
+                                <option value="">Selecione (opcional)...</option>
+                                {% for conta in contas_bancarias %}
+                                <option value="{{ conta.id }}">
+                                    {{ conta.banco }} - Ag: {{ conta.agencia or 'N/A' }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Descrição -->
+                        <div class="col-md-12 mb-3">
+                            <label for="descricao" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Descrição *
+                            </label>
+                            <input type="text" class="form-control" id="descricao" 
+                                   name="descricao" required maxlength="200">
+                        </div>
+                        
+                        <!-- Categoria -->
+                        <div class="col-md-6 mb-3">
+                            <label for="categoria" class="form-label">
+                                <i class="fas fa-tags me-1"></i>Categoria
+                            </label>
+                            <select class="form-select" id="categoria" name="categoria">
+                                <option value="">Selecione...</option>
+                                <option value="Vendas">Vendas</option>
+                                <option value="Serviços">Serviços</option>
+                                <option value="Consultoria">Consultoria</option>
+                                <option value="Aluguel">Aluguel</option>
+                                <option value="Outros">Outros</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Valor Original -->
+                        <div class="col-md-6 mb-3">
+                            <label for="valor_original" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Valor *
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="valor_original" 
+                                       name="valor_original" required step="0.01" min="0.01">
+                            </div>
+                        </div>
+                        
+                        <!-- Data de Vencimento -->
+                        <div class="col-md-6 mb-3">
+                            <label for="data_vencimento" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Data de Vencimento *
+                            </label>
+                            <input type="date" class="form-control" id="data_vencimento" 
+                                   name="data_vencimento" required>
+                        </div>
+                        
+                        <!-- Observação -->
+                        <div class="col-md-12 mb-3">
+                            <label for="observacao" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Observação
+                            </label>
+                            <textarea class="form-control" id="observacao" name="observacao" 
+                                      rows="3" maxlength="500"></textarea>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_contas_receber') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <div>
+                            <button type="reset" class="btn btn-outline-warning me-2">
+                                <i class="fas fa-undo me-2"></i>Limpar
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Salvar Conta
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

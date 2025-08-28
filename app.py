@@ -93,6 +93,79 @@ def init_db():
         )
     ''')
     
+    # Tabela de Contas Bancárias
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS contas_bancarias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            banco TEXT NOT NULL,
+            agencia TEXT,
+            conta TEXT,
+            tipo_conta TEXT DEFAULT 'corrente', -- corrente, poupanca, investimento
+            titular TEXT,
+            saldo_inicial DECIMAL(10,2) DEFAULT 0,
+            saldo_atual DECIMAL(10,2) DEFAULT 0,
+            ativa BOOLEAN DEFAULT 1,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Tabela de Contas a Pagar
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS contas_pagar (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pessoa_id INTEGER,
+            conta_bancaria_id INTEGER,
+            descricao TEXT NOT NULL,
+            categoria TEXT,
+            valor_original DECIMAL(10,2) NOT NULL,
+            valor_pago DECIMAL(10,2) DEFAULT 0,
+            data_vencimento DATE NOT NULL,
+            data_pagamento DATE,
+            status TEXT DEFAULT 'pendente', -- pendente, pago, vencido, parcial
+            observacao TEXT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (pessoa_id) REFERENCES pessoas (id),
+            FOREIGN KEY (conta_bancaria_id) REFERENCES contas_bancarias (id)
+        )
+    ''')
+    
+    # Tabela de Contas a Receber
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS contas_receber (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pessoa_id INTEGER,
+            conta_bancaria_id INTEGER,
+            descricao TEXT NOT NULL,
+            categoria TEXT,
+            valor_original DECIMAL(10,2) NOT NULL,
+            valor_recebido DECIMAL(10,2) DEFAULT 0,
+            data_vencimento DATE NOT NULL,
+            data_recebimento DATE,
+            status TEXT DEFAULT 'pendente', -- pendente, recebido, vencido, parcial
+            observacao TEXT,
+            data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (pessoa_id) REFERENCES pessoas (id),
+            FOREIGN KEY (conta_bancaria_id) REFERENCES contas_bancarias (id)
+        )
+    ''')
+    
+    # Tabela de Movimentações Financeiras
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS movimentacoes_financeiras (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            conta_bancaria_id INTEGER,
+            conta_pagar_id INTEGER,
+            conta_receber_id INTEGER,
+            tipo TEXT NOT NULL, -- entrada, saida, transferencia
+            valor DECIMAL(10,2) NOT NULL,
+            descricao TEXT,
+            data_movimentacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (conta_bancaria_id) REFERENCES contas_bancarias (id),
+            FOREIGN KEY (conta_pagar_id) REFERENCES contas_pagar (id),
+            FOREIGN KEY (conta_receber_id) REFERENCES contas_receber (id)
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -113,13 +186,29 @@ def dashboard():
     total_usuarios = conn.execute('SELECT COUNT(*) as total FROM usuarios').fetchone()['total']
     total_mercadorias = conn.execute('SELECT COUNT(*) as total FROM mercadorias').fetchone()['total']
     
+    # Estatísticas financeiras
+    total_contas_bancarias = conn.execute('SELECT COUNT(*) as total FROM contas_bancarias WHERE ativa = 1').fetchone()['total']
+    total_contas_pagar = conn.execute('SELECT COUNT(*) as total FROM contas_pagar WHERE status = "pendente"').fetchone()['total']
+    total_contas_receber = conn.execute('SELECT COUNT(*) as total FROM contas_receber WHERE status = "pendente"').fetchone()['total']
+    
+    # Valores financeiros
+    valor_pagar = conn.execute('SELECT COALESCE(SUM(valor_original - valor_pago), 0) as total FROM contas_pagar WHERE status IN ("pendente", "parcial")').fetchone()['total']
+    valor_receber = conn.execute('SELECT COALESCE(SUM(valor_original - valor_recebido), 0) as total FROM contas_receber WHERE status IN ("pendente", "parcial")').fetchone()['total']
+    saldo_total = conn.execute('SELECT COALESCE(SUM(saldo_atual), 0) as total FROM contas_bancarias WHERE ativa = 1').fetchone()['total']
+    
     conn.close()
     
     stats = {
         'empresas': total_empresas,
         'pessoas': total_pessoas,
         'usuarios': total_usuarios,
-        'mercadorias': total_mercadorias
+        'mercadorias': total_mercadorias,
+        'contas_bancarias': total_contas_bancarias,
+        'contas_pagar': total_contas_pagar,
+        'contas_receber': total_contas_receber,
+        'valor_pagar': valor_pagar,
+        'valor_receber': valor_receber,
+        'saldo_total': saldo_total
     }
     
     return render_template('dashboard.html', stats=stats)
@@ -323,6 +412,265 @@ def salvar_saldo():
     
     flash('Movimentação registrada com sucesso!', 'success')
     return redirect(url_for('listar_saldos'))
+
+# === ROTAS DE CONTAS BANCÁRIAS ===
+@app.route('/contas-bancarias')
+def listar_contas_bancarias():
+    """Lista todas as contas bancárias"""
+    conn = get_db_connection()
+    contas = conn.execute('SELECT * FROM contas_bancarias ORDER BY banco, agencia').fetchall()
+    conn.close()
+    return render_template('financeiro/contas_bancarias/listar.html', contas=contas)
+
+@app.route('/contas-bancarias/novo')
+def nova_conta_bancaria():
+    """Formulário para nova conta bancária"""
+    return render_template('financeiro/contas_bancarias/form.html')
+
+@app.route('/contas-bancarias/salvar', methods=['POST'])
+def salvar_conta_bancaria():
+    """Salva uma nova conta bancária"""
+    banco = request.form['banco']
+    agencia = request.form['agencia']
+    conta = request.form['conta']
+    tipo_conta = request.form['tipo_conta']
+    titular = request.form['titular']
+    saldo_inicial = float(request.form['saldo_inicial']) if request.form['saldo_inicial'] else 0
+    
+    conn = get_db_connection()
+    conn.execute('''
+        INSERT INTO contas_bancarias (banco, agencia, conta, tipo_conta, titular, saldo_inicial, saldo_atual)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (banco, agencia, conta, tipo_conta, titular, saldo_inicial, saldo_inicial))
+    conn.commit()
+    conn.close()
+    
+    flash('Conta bancária cadastrada com sucesso!', 'success')
+    return redirect(url_for('listar_contas_bancarias'))
+
+# === ROTAS DE CONTAS A PAGAR ===
+@app.route('/contas-pagar')
+def listar_contas_pagar():
+    """Lista todas as contas a pagar"""
+    conn = get_db_connection()
+    contas = conn.execute('''
+        SELECT cp.*, p.nome as pessoa_nome, cb.banco as banco_nome 
+        FROM contas_pagar cp 
+        LEFT JOIN pessoas p ON cp.pessoa_id = p.id 
+        LEFT JOIN contas_bancarias cb ON cp.conta_bancaria_id = cb.id 
+        ORDER BY cp.data_vencimento
+    ''').fetchall()
+    conn.close()
+    return render_template('financeiro/contas_pagar/listar.html', contas=contas)
+
+@app.route('/contas-pagar/novo')
+def nova_conta_pagar():
+    """Formulário para nova conta a pagar"""
+    conn = get_db_connection()
+    pessoas = conn.execute('SELECT * FROM pessoas WHERE tipo IN ("fornecedor", "funcionario") ORDER BY nome').fetchall()
+    contas_bancarias = conn.execute('SELECT * FROM contas_bancarias WHERE ativa = 1 ORDER BY banco').fetchall()
+    conn.close()
+    return render_template('financeiro/contas_pagar/form.html', pessoas=pessoas, contas_bancarias=contas_bancarias)
+
+@app.route('/contas-pagar/salvar', methods=['POST'])
+def salvar_conta_pagar():
+    """Salva uma nova conta a pagar"""
+    pessoa_id = request.form['pessoa_id']
+    conta_bancaria_id = request.form['conta_bancaria_id'] if request.form['conta_bancaria_id'] else None
+    descricao = request.form['descricao']
+    categoria = request.form['categoria']
+    valor_original = float(request.form['valor_original'])
+    data_vencimento = request.form['data_vencimento']
+    observacao = request.form['observacao']
+    
+    conn = get_db_connection()
+    conn.execute('''
+        INSERT INTO contas_pagar (pessoa_id, conta_bancaria_id, descricao, categoria, valor_original, data_vencimento, observacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (pessoa_id, conta_bancaria_id, descricao, categoria, valor_original, data_vencimento, observacao))
+    conn.commit()
+    conn.close()
+    
+    flash('Conta a pagar cadastrada com sucesso!', 'success')
+    return redirect(url_for('listar_contas_pagar'))
+
+@app.route('/contas-pagar/pagar/<int:id>')
+def pagar_conta(id):
+    """Formulário para pagamento de conta"""
+    conn = get_db_connection()
+    conta = conn.execute('''
+        SELECT cp.*, p.nome as pessoa_nome 
+        FROM contas_pagar cp 
+        LEFT JOIN pessoas p ON cp.pessoa_id = p.id 
+        WHERE cp.id = ?
+    ''', (id,)).fetchone()
+    contas_bancarias = conn.execute('SELECT * FROM contas_bancarias WHERE ativa = 1 ORDER BY banco').fetchall()
+    conn.close()
+    return render_template('financeiro/contas_pagar/pagar.html', conta=conta, contas_bancarias=contas_bancarias)
+
+@app.route('/contas-pagar/processar-pagamento/<int:id>', methods=['POST'])
+def processar_pagamento(id):
+    """Processa o pagamento de uma conta"""
+    conta_bancaria_id = request.form['conta_bancaria_id']
+    valor_pago = float(request.form['valor_pago'])
+    data_pagamento = request.form['data_pagamento']
+    observacao = request.form['observacao']
+    
+    conn = get_db_connection()
+    
+    # Buscar conta atual
+    conta = conn.execute('SELECT * FROM contas_pagar WHERE id = ?', (id,)).fetchone()
+    
+    # Atualizar conta a pagar
+    novo_valor_pago = conta['valor_pago'] + valor_pago
+    if novo_valor_pago >= conta['valor_original']:
+        status = 'pago'
+    else:
+        status = 'parcial'
+    
+    conn.execute('''
+        UPDATE contas_pagar 
+        SET valor_pago = ?, status = ?, data_pagamento = ?, observacao = ?
+        WHERE id = ?
+    ''', (novo_valor_pago, status, data_pagamento, observacao, id))
+    
+    # Registrar movimentação financeira
+    conn.execute('''
+        INSERT INTO movimentacoes_financeiras (conta_bancaria_id, conta_pagar_id, tipo, valor, descricao)
+        VALUES (?, ?, 'saida', ?, ?)
+    ''', (conta_bancaria_id, id, valor_pago, f'Pagamento: {conta["descricao"]}'))
+    
+    # Atualizar saldo da conta bancária
+    conn.execute('''
+        UPDATE contas_bancarias 
+        SET saldo_atual = saldo_atual - ?
+        WHERE id = ?
+    ''', (valor_pago, conta_bancaria_id))
+    
+    conn.commit()
+    conn.close()
+    
+    flash('Pagamento registrado com sucesso!', 'success')
+    return redirect(url_for('listar_contas_pagar'))
+
+# === ROTAS DE CONTAS A RECEBER ===
+@app.route('/contas-receber')
+def listar_contas_receber():
+    """Lista todas as contas a receber"""
+    conn = get_db_connection()
+    contas = conn.execute('''
+        SELECT cr.*, p.nome as pessoa_nome, cb.banco as banco_nome 
+        FROM contas_receber cr 
+        LEFT JOIN pessoas p ON cr.pessoa_id = p.id 
+        LEFT JOIN contas_bancarias cb ON cr.conta_bancaria_id = cb.id 
+        ORDER BY cr.data_vencimento
+    ''').fetchall()
+    conn.close()
+    return render_template('financeiro/contas_receber/listar.html', contas=contas)
+
+@app.route('/contas-receber/novo')
+def nova_conta_receber():
+    """Formulário para nova conta a receber"""
+    conn = get_db_connection()
+    pessoas = conn.execute('SELECT * FROM pessoas WHERE tipo = "cliente" ORDER BY nome').fetchall()
+    contas_bancarias = conn.execute('SELECT * FROM contas_bancarias WHERE ativa = 1 ORDER BY banco').fetchall()
+    conn.close()
+    return render_template('financeiro/contas_receber/form.html', pessoas=pessoas, contas_bancarias=contas_bancarias)
+
+@app.route('/contas-receber/salvar', methods=['POST'])
+def salvar_conta_receber():
+    """Salva uma nova conta a receber"""
+    pessoa_id = request.form['pessoa_id']
+    conta_bancaria_id = request.form['conta_bancaria_id'] if request.form['conta_bancaria_id'] else None
+    descricao = request.form['descricao']
+    categoria = request.form['categoria']
+    valor_original = float(request.form['valor_original'])
+    data_vencimento = request.form['data_vencimento']
+    observacao = request.form['observacao']
+    
+    conn = get_db_connection()
+    conn.execute('''
+        INSERT INTO contas_receber (pessoa_id, conta_bancaria_id, descricao, categoria, valor_original, data_vencimento, observacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (pessoa_id, conta_bancaria_id, descricao, categoria, valor_original, data_vencimento, observacao))
+    conn.commit()
+    conn.close()
+    
+    flash('Conta a receber cadastrada com sucesso!', 'success')
+    return redirect(url_for('listar_contas_receber'))
+
+@app.route('/contas-receber/receber/<int:id>')
+def receber_conta(id):
+    """Formulário para recebimento de conta"""
+    conn = get_db_connection()
+    conta = conn.execute('''
+        SELECT cr.*, p.nome as pessoa_nome 
+        FROM contas_receber cr 
+        LEFT JOIN pessoas p ON cr.pessoa_id = p.id 
+        WHERE cr.id = ?
+    ''', (id,)).fetchone()
+    contas_bancarias = conn.execute('SELECT * FROM contas_bancarias WHERE ativa = 1 ORDER BY banco').fetchall()
+    conn.close()
+    return render_template('financeiro/contas_receber/receber.html', conta=conta, contas_bancarias=contas_bancarias)
+
+@app.route('/contas-receber/processar-recebimento/<int:id>', methods=['POST'])
+def processar_recebimento(id):
+    """Processa o recebimento de uma conta"""
+    conta_bancaria_id = request.form['conta_bancaria_id']
+    valor_recebido = float(request.form['valor_recebido'])
+    data_recebimento = request.form['data_recebimento']
+    observacao = request.form['observacao']
+    
+    conn = get_db_connection()
+    
+    # Buscar conta atual
+    conta = conn.execute('SELECT * FROM contas_receber WHERE id = ?', (id,)).fetchone()
+    
+    # Atualizar conta a receber
+    novo_valor_recebido = conta['valor_recebido'] + valor_recebido
+    if novo_valor_recebido >= conta['valor_original']:
+        status = 'recebido'
+    else:
+        status = 'parcial'
+    
+    conn.execute('''
+        UPDATE contas_receber 
+        SET valor_recebido = ?, status = ?, data_recebimento = ?, observacao = ?
+        WHERE id = ?
+    ''', (novo_valor_recebido, status, data_recebimento, observacao, id))
+    
+    # Registrar movimentação financeira
+    conn.execute('''
+        INSERT INTO movimentacoes_financeiras (conta_bancaria_id, conta_receber_id, tipo, valor, descricao)
+        VALUES (?, ?, 'entrada', ?, ?)
+    ''', (conta_bancaria_id, id, valor_recebido, f'Recebimento: {conta["descricao"]}'))
+    
+    # Atualizar saldo da conta bancária
+    conn.execute('''
+        UPDATE contas_bancarias 
+        SET saldo_atual = saldo_atual + ?
+        WHERE id = ?
+    ''', (valor_recebido, conta_bancaria_id))
+    
+    conn.commit()
+    conn.close()
+    
+    flash('Recebimento registrado com sucesso!', 'success')
+    return redirect(url_for('listar_contas_receber'))
+
+# === ROTAS DE MOVIMENTAÇÕES FINANCEIRAS ===
+@app.route('/movimentacoes-financeiras')
+def listar_movimentacoes_financeiras():
+    """Lista todas as movimentações financeiras"""
+    conn = get_db_connection()
+    movimentacoes = conn.execute('''
+        SELECT mf.*, cb.banco as banco_nome, cb.agencia, cb.conta
+        FROM movimentacoes_financeiras mf
+        LEFT JOIN contas_bancarias cb ON mf.conta_bancaria_id = cb.id
+        ORDER BY mf.data_movimentacao DESC
+    ''').fetchall()
+    conn.close()
+    return render_template('financeiro/movimentacoes/listar.html', movimentacoes=movimentacoes)
 
 if __name__ == '__main__':
     # Inicializa o banco de dados

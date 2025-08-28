@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Conta Bancária - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-university me-2"></i>Nova Conta Bancária</h1>
+    <a href="{{ url_for('listar_contas_bancarias') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Cadastro de Conta Bancária</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('salvar_conta_bancaria') }}" method="POST">
+                    <div class="row">
+                        <!-- Banco -->
+                        <div class="col-md-6 mb-3">
+                            <label for="banco" class="form-label">
+                                <i class="fas fa-university me-1"></i>Banco *
+                            </label>
+                            <select class="form-select" id="banco" name="banco" required>
+                                <option value="">Selecione o banco...</option>
+                                <option value="Banco do Brasil">Banco do Brasil</option>
+                                <option value="Caixa Econômica Federal">Caixa Econômica Federal</option>
+                                <option value="Bradesco">Bradesco</option>
+                                <option value="Itaú">Itaú</option>
+                                <option value="Santander">Santander</option>
+                                <option value="BTG Pactual">BTG Pactual</option>
+                                <option value="Inter">Inter</option>
+                                <option value="Nubank">Nubank</option>
+                                <option value="C6 Bank">C6 Bank</option>
+                                <option value="Sicoob">Sicoob</option>
+                                <option value="Sicredi">Sicredi</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Banco Personalizado -->
+                        <div class="col-md-6 mb-3" id="banco-personalizado" style="display: none;">
+                            <label for="banco_personalizado" class="form-label">
+                                <i class="fas fa-edit me-1"></i>Nome do Banco
+                            </label>
+                            <input type="text" class="form-control" id="banco_personalizado" 
+                                   name="banco_personalizado" maxlength="100">
+                        </div>
+                        
+                        <!-- Agência -->
+                        <div class="col-md-6 mb-3">
+                            <label for="agencia" class="form-label">
+                                <i class="fas fa-building me-1"></i>Agência
+                            </label>
+                            <input type="text" class="form-control" id="agencia" 
+                                   name="agencia" maxlength="20">
+                        </div>
+                        
+                        <!-- Conta -->
+                        <div class="col-md-6 mb-3">
+                            <label for="conta" class="form-label">
+                                <i class="fas fa-credit-card me-1"></i>Conta
+                            </label>
+                            <input type="text" class="form-control" id="conta" 
+                                   name="conta" maxlength="20">
+                        </div>
+                        
+                        <!-- Tipo de Conta -->
+                        <div class="col-md-6 mb-3">
+                            <label for="tipo_conta" class="form-label">
+                                <i class="fas fa-list me-1"></i>Tipo de Conta *
+                            </label>
+                            <select class="form-select" id="tipo_conta" name="tipo_conta" required>
+                                <option value="">Selecione...</option>
+                                <option value="corrente">Conta Corrente</option>
+                                <option value="poupanca">Poupança</option>
+                                <option value="investimento">Investimento</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Titular -->
+                        <div class="col-md-6 mb-3">
+                            <label for="titular" class="form-label">
+                                <i class="fas fa-user me-1"></i>Titular
+                            </label>
+                            <input type="text" class="form-control" id="titular" 
+                                   name="titular" maxlength="200">
+                        </div>
+                        
+                        <!-- Saldo Inicial -->
+                        <div class="col-md-6 mb-3">
+                            <label for="saldo_inicial" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Saldo Inicial
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="saldo_inicial" 
+                                       name="saldo_inicial" step="0.01" value="0.00">
+                            </div>
+                            <div class="form-text">Este será também o saldo atual inicial</div>
+                        </div>
+                        
+                        <!-- Resumo da Conta -->
+                        <div class="col-md-12 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle me-2"></i>Resumo da Conta
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Banco:</small>
+                                            <div id="resumo-banco">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Tipo:</small>
+                                            <div id="resumo-tipo">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Saldo Inicial:</small>
+                                            <div id="resumo-saldo">R$ 0,00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_contas_bancarias') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <div>
+                            <button type="reset" class="btn btn-outline-warning me-2">
+                                <i class="fas fa-undo me-2"></i>Limpar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Salvar Conta
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bancoSelect = document.getElementById('banco');
+    const bancoPersonalizado = document.getElementById('banco-personalizado');
+    const bancoPersonalizadoInput = document.getElementById('banco_personalizado');
+    const tipoContaSelect = document.getElementById('tipo_conta');
+    const saldoInput = document.getElementById('saldo_inicial');
+    
+    const resumoBanco = document.getElementById('resumo-banco');
+    const resumoTipo = document.getElementById('resumo-tipo');
+    const resumoSaldo = document.getElementById('resumo-saldo');
+    
+    // Mostrar/ocultar campo banco personalizado
+    bancoSelect.addEventListener('change', function() {
+        if (this.value === 'Outro') {
+            bancoPersonalizado.style.display = 'block';
+            bancoPersonalizadoInput.required = true;
+        } else {
+            bancoPersonalizado.style.display = 'none';
+            bancoPersonalizadoInput.required = false;
+            bancoPersonalizadoInput.value = '';
+        }
+        atualizarResumo();
+    });
+    
+    // Atualizar resumo
+    function atualizarResumo() {
+        // Banco
+        let banco = bancoSelect.value;
+        if (banco === 'Outro') {
+            banco = bancoPersonalizadoInput.value || 'Banco personalizado';
+        }
+        resumoBanco.textContent = banco || '-';
+        
+        // Tipo
+        const tipo = tipoContaSelect.value;
+        resumoTipo.textContent = tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : '-';
+        
+        // Saldo
+        const saldo = parseFloat(saldoInput.value) || 0;
+        resumoSaldo.textContent = 'R$ ' + saldo.toFixed(2).replace('.', ',');
+        resumoSaldo.className = saldo >= 0 ? 'text-success fw-bold' : 'text-danger fw-bold';
+    }
+    
+    // Event listeners para atualizar resumo
+    bancoPersonalizadoInput.addEventListener('input', atualizarResumo);
+    tipoContaSelect.addEventListener('change', atualizarResumo);
+    saldoInput.addEventListener('input', atualizarResumo);
+    
+    // Interceptar submit para usar banco personalizado
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (bancoSelect.value === 'Outro' && bancoPersonalizadoInput.value) {
+            // Criar um input hidden com o valor do banco personalizado
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'banco';
+            hiddenInput.value = bancoPersonalizadoInput.value;
+            this.appendChild(hiddenInput);
+            
+            // Desabilitar o select para não enviar
+            bancoSelect.disabled = true;
+        }
+    });
+});
+</script>
+{% endblock %}
