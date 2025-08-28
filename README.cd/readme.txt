@@ -1,0 +1,6 @@
+CRIE UM SISTEMA ERP COM FLASK - de primeiro momento, use o banco de dados SQLite3.
+
+
+No momento, crie somente as rotinas, mas não crie as funções para não te sobrecarregar e travar, faça no seu limite, mas crie algumas funções de cadastros, como inserir empresas, pessoas, usuários, mercadorias, saldos, etc...
+
+gere para mim e faça um commit e um push no GitHub, atualizando...
