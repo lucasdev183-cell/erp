@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Mercadoria - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-box me-2"></i>Nova Mercadoria</h1>
+    <a href="{{ url_for('listar_mercadorias') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Cadastro de Mercadoria</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('salvar_mercadoria') }}" method="POST">
+                    <div class="row">
+                        <!-- Código -->
+                        <div class="col-md-4 mb-3">
+                            <label for="codigo" class="form-label">
+                                <i class="fas fa-barcode me-1"></i>Código
+                            </label>
+                            <input type="text" class="form-control" id="codigo" 
+                                   name="codigo" maxlength="50">
+                            <div class="form-text">Código interno da mercadoria</div>
+                        </div>
+                        
+                        <!-- Categoria -->
+                        <div class="col-md-4 mb-3">
+                            <label for="categoria" class="form-label">
+                                <i class="fas fa-tags me-1"></i>Categoria
+                            </label>
+                            <input type="text" class="form-control" id="categoria" 
+                                   name="categoria" maxlength="100">
+                        </div>
+                        
+                        <!-- Unidade de Medida -->
+                        <div class="col-md-4 mb-3">
+                            <label for="unidade_medida" class="form-label">
+                                <i class="fas fa-ruler me-1"></i>Unidade
+                            </label>
+                            <select class="form-select" id="unidade_medida" name="unidade_medida">
+                                <option value="">Selecione...</option>
+                                <option value="UN">Unidade</option>
+                                <option value="KG">Quilograma</option>
+                                <option value="G">Grama</option>
+                                <option value="L">Litro</option>
+                                <option value="ML">Mililitro</option>
+                                <option value="M">Metro</option>
+                                <option value="CM">Centímetro</option>
+                                <option value="M2">Metro Quadrado</option>
+                                <option value="M3">Metro Cúbico</option>
+                                <option value="CX">Caixa</option>
+                                <option value="PC">Peça</option>
+                                <option value="PAR">Par</option>
+                                <option value="DZ">Dúzia</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Descrição -->
+                        <div class="col-md-12 mb-3">
+                            <label for="descricao" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Descrição *
+                            </label>
+                            <input type="text" class="form-control" id="descricao" 
+                                   name="descricao" required maxlength="200">
+                            <div class="form-text">Descrição completa da mercadoria</div>
+                        </div>
+                        
+                        <!-- Preço de Custo -->
+                        <div class="col-md-4 mb-3">
+                            <label for="preco_custo" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Preço de Custo
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="preco_custo" 
+                                       name="preco_custo" step="0.01" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Preço de Venda -->
+                        <div class="col-md-4 mb-3">
+                            <label for="preco_venda" class="form-label">
+                                <i class="fas fa-tag me-1"></i>Preço de Venda
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="preco_venda" 
+                                       name="preco_venda" step="0.01" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Estoque Mínimo -->
+                        <div class="col-md-4 mb-3">
+                            <label for="estoque_minimo" class="form-label">
+                                <i class="fas fa-exclamation-triangle me-1"></i>Estoque Mínimo
+                            </label>
+                            <input type="number" class="form-control" id="estoque_minimo" 
+                                   name="estoque_minimo" min="0" value="0">
+                            <div class="form-text">Quantidade mínima em estoque</div>
+                        </div>
+                        
+                        <!-- Margem de Lucro (calculada) -->
+                        <div class="col-md-12 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-calculator me-2"></i>Cálculo de Margem
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Margem de Lucro:</small>
+                                            <div class="h5" id="margem">0%</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Lucro Unitário:</small>
+                                            <div class="h5" id="lucro">R$ 0,00</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Markup:</small>
+                                            <div class="h5" id="markup">0%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_mercadorias') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <div>
+                            <button type="reset" class="btn btn-outline-warning me-2">
+                                <i class="fas fa-undo me-2"></i>Limpar
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>Salvar Mercadoria
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const precoCusto = document.getElementById('preco_custo');
+    const precoVenda = document.getElementById('preco_venda');
+    const margemElement = document.getElementById('margem');
+    const lucroElement = document.getElementById('lucro');
+    const markupElement = document.getElementById('markup');
+    
+    function calcularMargem() {
+        const custo = parseFloat(precoCusto.value) || 0;
+        const venda = parseFloat(precoVenda.value) || 0;
+        
+        if (custo > 0 && venda > 0) {
+            const lucro = venda - custo;
+            const margem = ((lucro / venda) * 100);
+            const markup = ((lucro / custo) * 100);
+            
+            margemElement.textContent = margem.toFixed(1) + '%';
+            margemElement.className = 'h5 ' + (margem > 0 ? 'text-success' : 'text-danger');
+            
+            lucroElement.textContent = 'R$ ' + lucro.toFixed(2).replace('.', ',');
+            lucroElement.className = 'h5 ' + (lucro > 0 ? 'text-success' : 'text-danger');
+            
+            markupElement.textContent = markup.toFixed(1) + '%';
+            markupElement.className = 'h5 ' + (markup > 0 ? 'text-success' : 'text-danger');
+        } else {
+            margemElement.textContent = '0%';
+            margemElement.className = 'h5';
+            lucroElement.textContent = 'R$ 0,00';
+            lucroElement.className = 'h5';
+            markupElement.textContent = '0%';
+            markupElement.className = 'h5';
+        }
+    }
+    
+    precoCusto.addEventListener('input', calcularMargem);
+    precoVenda.addEventListener('input', calcularMargem);
+    
+    // Gerar código automático se não preenchido
+    const codigoInput = document.getElementById('codigo');
+    const descricaoInput = document.getElementById('descricao');
+    
+    descricaoInput.addEventListener('blur', function() {
+        if (!codigoInput.value && this.value) {
+            // Gerar código baseado na descrição
+            const codigo = this.value
+                .toUpperCase()
+                .replace(/[^A-Z0-9]/g, '')
+                .substring(0, 6) + 
+                Date.now().toString().slice(-3);
+            codigoInput.value = codigo;
+        }
+    });
+});
+</script>
+{% endblock %}

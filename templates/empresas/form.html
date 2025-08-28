@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Empresa - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-building me-2"></i>Nova Empresa</h1>
+    <a href="{{ url_for('listar_empresas') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Cadastro de Empresa</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('salvar_empresa') }}" method="POST" id="empresaForm">
+                    <div class="row">
+                        <!-- Razão Social -->
+                        <div class="col-md-12 mb-3">
+                            <label for="razao_social" class="form-label">
+                                <i class="fas fa-building me-1"></i>Razão Social *
+                            </label>
+                            <input type="text" class="form-control" id="razao_social" 
+                                   name="razao_social" required maxlength="200">
+                            <div class="form-text">Nome oficial da empresa conforme registro</div>
+                        </div>
+                        
+                        <!-- Nome Fantasia -->
+                        <div class="col-md-12 mb-3">
+                            <label for="nome_fantasia" class="form-label">
+                                <i class="fas fa-tag me-1"></i>Nome Fantasia
+                            </label>
+                            <input type="text" class="form-control" id="nome_fantasia" 
+                                   name="nome_fantasia" maxlength="200">
+                            <div class="form-text">Nome comercial da empresa</div>
+                        </div>
+                        
+                        <!-- CNPJ -->
+                        <div class="col-md-6 mb-3">
+                            <label for="cnpj" class="form-label">
+                                <i class="fas fa-id-card me-1"></i>CNPJ
+                            </label>
+                            <input type="text" class="form-control" id="cnpj" 
+                                   name="cnpj" data-mask="cnpj" maxlength="18">
+                            <div class="form-text">Formato: 00.000.000/0000-00</div>
+                        </div>
+                        
+                        <!-- Inscrição Estadual -->
+                        <div class="col-md-6 mb-3">
+                            <label for="inscricao_estadual" class="form-label">
+                                <i class="fas fa-certificate me-1"></i>Inscrição Estadual
+                            </label>
+                            <input type="text" class="form-control" id="inscricao_estadual" 
+                                   name="inscricao_estadual" maxlength="20">
+                        </div>
+                        
+                        <!-- Endereço -->
+                        <div class="col-md-12 mb-3">
+                            <label for="endereco" class="form-label">
+                                <i class="fas fa-map-marker-alt me-1"></i>Endereço
+                            </label>
+                            <textarea class="form-control" id="endereco" name="endereco" 
+                                      rows="2" maxlength="500"></textarea>
+                            <div class="form-text">Endereço completo da empresa</div>
+                        </div>
+                        
+                        <!-- Telefone -->
+                        <div class="col-md-6 mb-3">
+                            <label for="telefone" class="form-label">
+                                <i class="fas fa-phone me-1"></i>Telefone
+                            </label>
+                            <input type="text" class="form-control" id="telefone" 
+                                   name="telefone" data-mask="phone" maxlength="15">
+                            <div class="form-text">Formato: (00) 00000-0000</div>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email
+                            </label>
+                            <input type="email" class="form-control" id="email" 
+                                   name="email" maxlength="100">
+                            <div class="form-text">Email principal da empresa</div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Botões -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('listar_empresas') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                                <div>
+                                    <button type="reset" class="btn btn-outline-warning me-2">
+                                        <i class="fas fa-undo me-2"></i>Limpar
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save me-2"></i>Salvar Empresa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('empresaForm');
+    
+    // Validação do CNPJ
+    const cnpjInput = document.getElementById('cnpj');
+    cnpjInput.addEventListener('blur', function() {
+        const cnpj = this.value;
+        if (cnpj && !Utils.validateCNPJ(cnpj)) {
+            this.classList.add('is-invalid');
+            if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('invalid-feedback')) {
+                const feedback = document.createElement('div');
+                feedback.className = 'invalid-feedback';
+                feedback.textContent = 'CNPJ inválido';
+                this.parentNode.appendChild(feedback);
+            }
+        } else {
+            this.classList.remove('is-invalid');
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.remove();
+            }
+        }
+    });
+    
+    // Validação do formulário
+    form.addEventListener('submit', function(e) {
+        const cnpj = cnpjInput.value;
+        if (cnpj && !Utils.validateCNPJ(cnpj)) {
+            e.preventDefault();
+            cnpjInput.focus();
+            Utils.showToast('Por favor, verifique o CNPJ informado', 'error');
+            return false;
+        }
+        
+        // Mostrar loading
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner"></span> Salvando...';
+        submitBtn.disabled = true;
+        
+        // Restaurar botão em caso de erro (timeout)
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 10000);
+    });
+    
+    // Auto-completar nome fantasia baseado na razão social
+    const razaoSocialInput = document.getElementById('razao_social');
+    const nomeFantasiaInput = document.getElementById('nome_fantasia');
+    
+    razaoSocialInput.addEventListener('blur', function() {
+        if (this.value && !nomeFantasiaInput.value) {
+            nomeFantasiaInput.value = this.value;
+        }
+    });
+});
+</script>
+{% endblock %}

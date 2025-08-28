@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Sistema ERP - Página Inicial{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-building fa-4x text-primary mb-4"></i>
+                <h1 class="display-4 text-primary mb-3">Sistema ERP</h1>
+                <p class="lead mb-4">Bem-vindo ao seu sistema de gestão empresarial</p>
+                <p class="text-muted mb-4">
+                    Gerencie empresas, pessoas, usuários, mercadorias e controle de estoque 
+                    de forma simples e eficiente.
+                </p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url_for('nova_empresa') }}" class="btn btn-success btn-lg w-100">
+                                    <i class="fas fa-plus me-2"></i>Nova Empresa
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url_for('nova_pessoa') }}" class="btn btn-info btn-lg w-100">
+                                    <i class="fas fa-user-plus me-2"></i>Nova Pessoa
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="{{ url_for('nova_mercadoria') }}" class="btn btn-warning btn-lg w-100">
+                                    <i class="fas fa-box me-2"></i>Nova Mercadoria
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Sobre o Sistema</h5>
+            </div>
+            <div class="card-body">
+                <p>Este sistema ERP foi desenvolvido para facilitar a gestão dos seus negócios, oferecendo:</p>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Cadastro de empresas e pessoas</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Controle de usuários e permissões</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Gestão de mercadorias</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Controle de estoque</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Interface responsiva e intuitiva</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-rocket me-2"></i>Primeiros Passos</h5>
+            </div>
+            <div class="card-body">
+                <p>Para começar a usar o sistema, siga estes passos:</p>
+                <ol>
+                    <li>Cadastre sua empresa no sistema</li>
+                    <li>Adicione usuários para acesso</li>
+                    <li>Registre pessoas (clientes/fornecedores)</li>
+                    <li>Cadastre suas mercadorias</li>
+                    <li>Comece a controlar seu estoque</li>
+                </ol>
+                <div class="mt-3">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-2"></i>Ir para Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

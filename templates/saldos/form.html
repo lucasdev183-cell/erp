@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Movimentação - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-plus-circle me-2"></i>Nova Movimentação</h1>
+    <a href="{{ url_for('listar_saldos') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Voltar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Movimentação de Estoque</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('salvar_saldo') }}" method="POST">
+                    <div class="row">
+                        <!-- Mercadoria -->
+                        <div class="col-md-12 mb-3">
+                            <label for="mercadoria_id" class="form-label">
+                                <i class="fas fa-box me-1"></i>Mercadoria *
+                            </label>
+                            <select class="form-select" id="mercadoria_id" name="mercadoria_id" required>
+                                <option value="">Selecione uma mercadoria...</option>
+                                {% for mercadoria in mercadorias %}
+                                <option value="{{ mercadoria.id }}">
+                                    {{ mercadoria.codigo }} - {{ mercadoria.descricao }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Tipo de Movimentação -->
+                        <div class="col-md-6 mb-3">
+                            <label for="tipo_movimento" class="form-label">
+                                <i class="fas fa-arrows-alt me-1"></i>Tipo de Movimentação *
+                            </label>
+                            <select class="form-select" id="tipo_movimento" name="tipo_movimento" required>
+                                <option value="">Selecione...</option>
+                                <option value="entrada">
+                                    <i class="fas fa-arrow-up"></i> Entrada
+                                </option>
+                                <option value="saida">
+                                    <i class="fas fa-arrow-down"></i> Saída
+                                </option>
+                                <option value="ajuste">
+                                    <i class="fas fa-edit"></i> Ajuste
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <!-- Quantidade -->
+                        <div class="col-md-6 mb-3">
+                            <label for="quantidade" class="form-label">
+                                <i class="fas fa-sort-numeric-up me-1"></i>Quantidade *
+                            </label>
+                            <input type="number" class="form-control" id="quantidade" 
+                                   name="quantidade" required min="1" step="1">
+                        </div>
+                        
+                        <!-- Valor Unitário -->
+                        <div class="col-md-6 mb-3">
+                            <label for="valor_unitario" class="form-label">
+                                <i class="fas fa-dollar-sign me-1"></i>Valor Unitário
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control" id="valor_unitario" 
+                                       name="valor_unitario" step="0.01" min="0">
+                            </div>
+                            <div class="form-text">Deixe em branco se não aplicável</div>
+                        </div>
+                        
+                        <!-- Valor Total (calculado) -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-calculator me-1"></i>Valor Total
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="text" class="form-control" id="valor_total" 
+                                       readonly style="background-color: #f8f9fa;">
+                            </div>
+                            <div class="form-text">Calculado automaticamente</div>
+                        </div>
+                        
+                        <!-- Observação -->
+                        <div class="col-md-12 mb-3">
+                            <label for="observacao" class="form-label">
+                                <i class="fas fa-comment me-1"></i>Observação
+                            </label>
+                            <textarea class="form-control" id="observacao" name="observacao" 
+                                      rows="3" maxlength="500"></textarea>
+                            <div class="form-text">Motivo ou detalhes da movimentação</div>
+                        </div>
+                        
+                        <!-- Resumo da Operação -->
+                        <div class="col-md-12 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-info-circle me-2"></i>Resumo da Operação
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Mercadoria:</small>
+                                            <div id="resumo-mercadoria">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Movimentação:</small>
+                                            <div id="resumo-tipo">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Total:</small>
+                                            <div id="resumo-total">R$ 0,00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Botões -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('listar_saldos') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <div>
+                            <button type="reset" class="btn btn-outline-warning me-2">
+                                <i class="fas fa-undo me-2"></i>Limpar
+                            </button>
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-save me-2"></i>Registrar Movimentação
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mercadoriaSelect = document.getElementById('mercadoria_id');
+    const tipoSelect = document.getElementById('tipo_movimento');
+    const quantidadeInput = document.getElementById('quantidade');
+    const valorUnitarioInput = document.getElementById('valor_unitario');
+    const valorTotalInput = document.getElementById('valor_total');
+    
+    const resumoMercadoria = document.getElementById('resumo-mercadoria');
+    const resumoTipo = document.getElementById('resumo-tipo');
+    const resumoTotal = document.getElementById('resumo-total');
+    
+    function calcularTotal() {
+        const quantidade = parseFloat(quantidadeInput.value) || 0;
+        const valorUnitario = parseFloat(valorUnitarioInput.value) || 0;
+        const total = quantidade * valorUnitario;
+        
+        valorTotalInput.value = total.toFixed(2).replace('.', ',');
+        resumoTotal.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+        
+        if (total > 0) {
+            resumoTotal.className = 'text-success fw-bold';
+        } else {
+            resumoTotal.className = '';
+        }
+    }
+    
+    function atualizarResumo() {
+        // Mercadoria
+        const mercadoriaOption = mercadoriaSelect.options[mercadoriaSelect.selectedIndex];
+        if (mercadoriaSelect.value) {
+            resumoMercadoria.textContent = mercadoriaOption.text;
+            resumoMercadoria.className = 'fw-bold';
+        } else {
+            resumoMercadoria.textContent = '-';
+            resumoMercadoria.className = '';
+        }
+        
+        // Tipo
+        if (tipoSelect.value) {
+            const icons = {
+                'entrada': '↗️ Entrada',
+                'saida': '↘️ Saída',
+                'ajuste': '⚖️ Ajuste'
+            };
+            resumoTipo.textContent = icons[tipoSelect.value] || tipoSelect.value;
+            resumoTipo.className = `fw-bold text-${tipoSelect.value === 'entrada' ? 'success' : tipoSelect.value === 'saida' ? 'danger' : 'warning'}`;
+        } else {
+            resumoTipo.textContent = '-';
+            resumoTipo.className = '';
+        }
+        
+        calcularTotal();
+    }
+    
+    // Event listeners
+    quantidadeInput.addEventListener('input', calcularTotal);
+    valorUnitarioInput.addEventListener('input', calcularTotal);
+    mercadoriaSelect.addEventListener('change', atualizarResumo);
+    tipoSelect.addEventListener('change', atualizarResumo);
+    
+    // Sugerir observação baseada no tipo
+    tipoSelect.addEventListener('change', function() {
+        const observacaoInput = document.getElementById('observacao');
+        if (!observacaoInput.value) {
+            const sugestoes = {
+                'entrada': 'Compra de mercadoria',
+                'saida': 'Venda de mercadoria',
+                'ajuste': 'Ajuste de inventário'
+            };
+            observacaoInput.placeholder = sugestoes[this.value] || 'Descreva o motivo da movimentação';
+        }
+    });
+    
+    // Validação do formulário
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const quantidade = parseInt(quantidadeInput.value);
+        const tipo = tipoSelect.value;
+        
+        if (tipo === 'saida' && quantidade <= 0) {
+            e.preventDefault();
+            alert('Para saída, a quantidade deve ser maior que zero');
+            quantidadeInput.focus();
+            return;
+        }
+        
+        if (!mercadoriaSelect.value) {
+            e.preventDefault();
+            alert('Selecione uma mercadoria');
+            mercadoriaSelect.focus();
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

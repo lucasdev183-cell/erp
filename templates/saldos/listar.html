@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Controle de Estoque - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-warehouse me-2"></i>Controle de Estoque</h1>
+    <a href="{{ url_for('novo_saldo') }}" class="btn btn-info">
+        <i class="fas fa-plus me-2"></i>Nova Movimentação
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Histórico de Movimentações</h5>
+    </div>
+    <div class="card-body">
+        {% if saldos %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Mercadoria</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                        <th>Valor Unitário</th>
+                        <th>Valor Total</th>
+                        <th>Observação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for saldo in saldos %}
+                    <tr>
+                        <td>{{ saldo.data_movimento.strftime('%d/%m/%Y %H:%M') if saldo.data_movimento else '-' }}</td>
+                        <td><strong>{{ saldo.mercadoria_descricao }}</strong></td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if saldo.tipo_movimento == 'entrada' else 'danger' if saldo.tipo_movimento == 'saida' else 'warning' }}">
+                                <i class="fas fa-{{ 'arrow-up' if saldo.tipo_movimento == 'entrada' else 'arrow-down' if saldo.tipo_movimento == 'saida' else 'edit' }}"></i>
+                                {{ saldo.tipo_movimento.title() }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="{{ 'text-success' if saldo.tipo_movimento == 'entrada' else 'text-danger' if saldo.tipo_movimento == 'saida' else 'text-warning' }}">
+                                {{ '+' if saldo.tipo_movimento == 'entrada' else '-' if saldo.tipo_movimento == 'saida' else '±' }}{{ saldo.quantidade }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if saldo.valor_unitario %}
+                                R$ {{ "%.2f"|format(saldo.valor_unitario) }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if saldo.valor_unitario and saldo.quantidade %}
+                                <strong>R$ {{ "%.2f"|format(saldo.valor_unitario * saldo.quantidade) }}</strong>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ saldo.observacao or '-' }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary" 
+                                        data-bs-toggle="tooltip" title="Visualizar">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-warning"
+                                        data-bs-toggle="tooltip" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-warehouse fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhuma movimentação registrada</h5>
+            <p class="text-muted">Clique no botão "Nova Movimentação" para começar</p>
+            <a href="{{ url_for('novo_saldo') }}" class="btn btn-info">
+                <i class="fas fa-plus me-2"></i>Registrar Primeira Movimentação
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Mercadorias - Sistema ERP{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0"><i class="fas fa-box me-2"></i>Mercadorias</h1>
+    <a href="{{ url_for('nova_mercadoria') }}" class="btn btn-warning">
+        <i class="fas fa-plus me-2"></i>Nova Mercadoria
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Lista de Mercadorias Cadastradas</h5>
+    </div>
+    <div class="card-body">
+        {% if mercadorias %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descrição</th>
+                        <th>Categoria</th>
+                        <th>Unidade</th>
+                        <th>Preço Custo</th>
+                        <th>Preço Venda</th>
+                        <th>Estoque Mín.</th>
+                        <th>Data Cadastro</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mercadoria in mercadorias %}
+                    <tr>
+                        <td><code>{{ mercadoria.codigo or '-' }}</code></td>
+                        <td><strong>{{ mercadoria.descricao }}</strong></td>
+                        <td>{{ mercadoria.categoria or '-' }}</td>
+                        <td>{{ mercadoria.unidade_medida or '-' }}</td>
+                        <td>
+                            {% if mercadoria.preco_custo %}
+                                <span class="text-success">R$ {{ "%.2f"|format(mercadoria.preco_custo) }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mercadoria.preco_venda %}
+                                <span class="text-primary">R$ {{ "%.2f"|format(mercadoria.preco_venda) }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'warning' if mercadoria.estoque_minimo > 0 else 'secondary' }}">
+                                {{ mercadoria.estoque_minimo }}
+                            </span>
+                        </td>
+                        <td>{{ mercadoria.data_cadastro.strftime('%d/%m/%Y') if mercadoria.data_cadastro else '-' }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-primary" 
+                                        data-bs-toggle="tooltip" title="Visualizar">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-warning"
+                                        data-bs-toggle="tooltip" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-info"
+                                        data-bs-toggle="tooltip" title="Movimentar Estoque">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-box fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Nenhuma mercadoria cadastrada</h5>
+            <p class="text-muted">Clique no botão "Nova Mercadoria" para começar</p>
+            <a href="{{ url_for('nova_mercadoria') }}" class="btn btn-warning">
+                <i class="fas fa-plus me-2"></i>Cadastrar Primeira Mercadoria
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
